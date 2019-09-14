@@ -16,7 +16,7 @@ app.use(require('./routes/usuario'));
 // conexion a base de datos
 mongoose.connect(process.env.URLDB ,{ useNewUrlParser: true , useCreateIndex:true, useUnifiedTopology: true }, (err,res) => {
     if (err) throw err;
-    console.log('Base de Datos levantada');
+    console.log('Base de Datos levantada en', process.env.URLDB);
 })
 
 app.listen(process.env.PORT , () => {
