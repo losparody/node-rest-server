@@ -4,10 +4,11 @@ const bcypt = require('bcrypt');
 const _ = require('underscore');
 
 const Usuario = require('../models/usuario');
+const { verificaToken, verificaAdminRole } = require('../middlewares/autenticacion');
 
 
 // urls
-app.get('/usuarios', function (req, res) {
+app.get('/usuarios',verificaToken, function (req, res) {
     
     let desde = req.query.body;
     let limit = req.query.limit;
@@ -38,7 +39,7 @@ app.get('/usuarios', function (req, res) {
 })
  */
 
-app.post('/usuario', function (req, res) {
+app.post('/usuario',[verificaToken,verificaAdminRole], function (req, res) {
     
     let body = req.body;
     let usuario = new Usuario({
@@ -61,7 +62,7 @@ app.post('/usuario', function (req, res) {
     
 })
 
-app.put('/usuario/:id', function (req, res) {
+app.put('/usuario/:id',[verificaToken,verificaAdminRole], function (req, res) {
     
     let id = req.params.id;
     
@@ -81,7 +82,7 @@ app.put('/usuario/:id', function (req, res) {
     })
 })
 
-app.delete('/usuario:id', function (req, res) {
+app.delete('/usuario:id',[verificaToken,verificaAdminRole], function (req, res) {
     let id = req.params.id;
     
     //Usuario.findByIdAndRemove(id,(err,usuarioBorrado) => {

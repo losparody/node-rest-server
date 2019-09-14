@@ -4,10 +4,13 @@ process.env.PORT = process.env.PORT || 3000;
 //---------------------------------------
 // Entorno Desa o Produccion
 //---------------------------------------
-
 process.env.NODE_ENV = process.env.NODE_ENV || 'dev';
 
-
+//---------------------------------------
+// Configuracion TOKEN
+//---------------------------------------
+process.env.TOKEN_CADUCIDAD = 60*60*24*30;
+process.env.TOKEN_SEED = process.env.TOKEN_SEED || 'seed-de-desarrollo';
 // base de datos
 let urlDB;
 
