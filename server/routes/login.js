@@ -4,6 +4,10 @@ const bcypt = require('bcrypt');
 const _ = require('underscore');
 const jwt = require('jsonwebtoken');
 
+const {GoogleAuth} = require('google-auth-library');
+const client = new GoogleAuth(process.env.CLIENT_ID);
+
+
 app.post('/login', function (req, res) {
 
         let body = req.body
@@ -27,15 +31,39 @@ app.post('/login', function (req, res) {
                 token: token 
             });
         });
-})
+});
 
 
+// Configs de Google
+async function verify( token ) {
+    const ticket = await client.verifyIdToken({
+        idtoken: token,
+        audience: process.env.CLIENT_ID
+    });
+    const payload = ticket.getPayLoad();
+    return {
+        name: payload.name,
+        email: payload.email,
+        image: payload.picture,
+        google: true
+    };
+};
 
 
+app.post('/google', async(req,res) =>{
+   
+   let token = req.body.idtoken;
+   let googleUser = await verify(token)
+        .catch(e => {
+            return res.status(403).json({
+                ok: false,
+                err: e
+            })
+        });
+    res.json({
+        usuario: googleUser
+    });
 
-
-
-
-
+});
 
 module.exports = app;

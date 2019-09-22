@@ -5,15 +5,19 @@ const mongoose = require('mongoose');
 
 const app = express();
 const bodyParser = require('body-parser');
-
+const path = require('path');
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
+
+// habilitar carpeta ../"public" para que sea accedida por fuera de las rutas
+app.use(express.static(path.resolve(__dirname , '../public')));
+
 // rutas configuracion global
 app.use(require('./routes/index'));
 
-    
+   
 // conexion a base de datos
 mongoose.connect(process.env.URLDB ,{ useNewUrlParser: true , useCreateIndex:true, useUnifiedTopology: true }, (err,res) => {
     if (err) throw err;
