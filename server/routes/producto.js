@@ -1,13 +1,9 @@
 const express = require('express');
-
 const { verificaToken } = require('../middlewares/autenticacion');
-
-let app = express;
-
+let app = express();
 let producto = require('../models/producto');
 
-
-app.get('/productos', verificaToken,(req,res)=>{
+app.get('/productos', verificaToken, (req,res) => {
     //traer todos los productos con usuario y categoria. 
     // paginado
     let desde = req.query.desde || 0;
@@ -28,7 +24,7 @@ app.get('/productos', verificaToken,(req,res)=>{
                 ok: false,
                 err
             });
-        }
+        };
 
         Producto.count({ disponible: true }, (err, conteo) => {
             res.json({
@@ -39,8 +35,8 @@ app.get('/productos', verificaToken,(req,res)=>{
         });
 
     });
-
 })
+
 
 app.get('/productos/:id',verificaToken,(req, res) => {
     let id = req.param.id;
@@ -55,23 +51,28 @@ app.get('/productos/:id',verificaToken,(req, res) => {
                     err
                 });
             }
-            if (!roductoDB) {
+
+            if (!productoDB) {
                 return res.status(400).json({
                    ok: false,
                    err: {
                        message: 'Producto inexistente'
                    } 
-                })
+                });
             }
 
             res.status(201).json({
                 ok:true,
                 producto: productoDB
             });
+        });
 
 })
 
-app.post('productos',(req, res) =>{
+
+
+app.post('productos',verificaToken, (req, res) => {
+
     let body = req.body;
 
     let producto = new Producto({
@@ -82,27 +83,27 @@ app.post('productos',(req, res) =>{
         disponible: body.disponible ,
         categoria: body.categoria
     });
-    
-    producto.save(err, productoDB) => {
+
+    producto.save( (err,productoDB) => {
+
         if (err) {
             return res.status(500).json({
                 ok:false,
                 err
-            })
+            });
         };
 
-        res.status(201).json({
+        res.status(201).json( {
             ok:true,
             producto: productoDB
         });
-    }
-})
 
+    });
+});
 
 //..................................................
 // PUT - actualizacion del producto
 //..................................................
-
 app.put('producto/:id',verificaToken, (req, res) =>{
     let id = req.param.id;
 
@@ -139,13 +140,10 @@ app.put('producto/:id',verificaToken, (req, res) =>{
                 ok:true ,
                 producto: productoGuardado
             });
-
         })
-
     })
-
-
 })
+
 
 app.delete('producto/:id',verificaToken,(req, res) =>{
 
@@ -180,6 +178,8 @@ app.delete('producto/:id',verificaToken,(req, res) =>{
     });
 })
 
+
+
 app.get('/productos/buscar/:termino',verificaToken, (req, res) => {
 
     let termino = req.params.termino;
@@ -195,15 +195,14 @@ app.get('/productos/buscar/:termino',verificaToken, (req, res) => {
                 return res.status(500).json({
                     ok: false,
                     err
-                })
+                });
             }
 
             res.json({
                 ok:true,
                 productos: productos
-            })
+            });
         })
 })
 
-modulo.exports = app;
-
+module.exports = app;
