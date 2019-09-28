@@ -1,179 +1,187 @@
 const express = require('express');
 const fileUpload = require('express-fileupload');
 const app = express();
+
 const Usuario = require('../models/usuario');
 const Producto = require('../models/producto');
 
-// file system + path son nativos de node
 const fs = require('fs');
 const path = require('path');
 
+
+// default options
 app.use(fileUpload());
 
 
-//...............................................................
-// subimos archivo
-//...............................................................
-app.put('/upload/:tipo/:id', (req,res) => {
+app.put('/upload/:tipo/:id', function(req, res) {
 
     let tipo = req.params.tipo;
     let id = req.params.id;
 
-
     if (!req.files) {
+        return res.status(400)
+            .json({
+                ok: false,
+                err: {
+                    message: 'No se ha seleccionado ningún archivo'
+                }
+            });
+    }
+
+    // Valida tipo
+    let tiposValidos = ['productos', 'usuarios'];
+    if (tiposValidos.indexOf(tipo) < 0) {
         return res.status(400).json({
             ok: false,
             err: {
-               message: 'No ha seleccionado archivos' 
+                message: 'Los tipos permitidas son ' + tiposValidos.join(', ')
             }
-        });
-    };
+        })
+    }
 
-    let tiposValidos  = ['producto', usuario];
-    if (tiposValidos.indexOf( tipo ) < 0 ) {
-        return res.status(400).json({
-            ok: false,
-            err: {
-                message: 'Los tipos permitidos son ' + tiposValidos
-            }
-        });
-    };
-
-
-    // el nombre 'archivo' es el valor puesto en el body del postman (OJO)
     let archivo = req.files.archivo;
-
-    let extensionesValidas = ['png', 'jpg', 'bmp','jpeg'];
     let nombreCortado = archivo.name.split('.');
-    let extension = nombreCortado[nombreCortado.lenght(),-1];
+    let extension = nombreCortado[nombreCortado.length - 1];
 
-    if (extensionesValidas.indexOf( extension ) < 0 ) {
+    // Extensiones permitidas
+    let extensionesValidas = ['png', 'jpg', 'gif', 'jpeg'];
+
+    if (extensionesValidas.indexOf(extension) < 0) {
         return res.status(400).json({
-            ok:false, 
+            ok: false,
             err: {
-                message: ' Las extensiones permitidas son ' + extensionesValidas,
-                ext: extension 
+                message: 'Las extensiones permitidas son ' + extensionesValidas.join(', '),
+                ext: extension
             }
-        });
-    };
+        })
+    }
 
-   // cambiar nombre al archivo
-   let nombreArchivo = `${ id }-${ new Date().getMilliseconds()}.${ extension}`;
-    
-    // subir 
+    // Cambiar nombre al archivo
+    // 183912kuasidauso-123.jpg
+    let nombreArchivo = `${ id }-${ new Date().getMilliseconds()  }.${ extension }`;
+
+
     archivo.mv(`uploads/${ tipo }/${ nombreArchivo }`, (err) => {
-        if (err) {
-            return res.status(500).json({
-                ok:false ,
-                err
-            })
-        };
 
-        //
+        if (err)
+            return res.status(500).json({
+                ok: false,
+                err
+            });
+
+        // Aqui, imagen cargada
         if (tipo === 'usuarios') {
-            imagenUsuario(id,res, nombreArchivo);
+            imagenUsuario(id, res, nombreArchivo);
         } else {
-            imagenProducto(id,res, nombreArchivo);
-        };
-       
-    })
-    
+            imagenProducto(id, res, nombreArchivo);
+        }
+
+    });
+
 });
 
-
-//.........................................................................
-//
-//.........................................................................
 function imagenUsuario(id, res, nombreArchivo) {
+
     Usuario.findById(id, (err, usuarioDB) => {
-        if (err) {
 
+        if (err) {
             borraArchivo(nombreArchivo, 'usuarios');
 
             return res.status(500).json({
-                ok: false, 
+                ok: false,
                 err
             });
-        };
+        }
 
         if (!usuarioDB) {
 
             borraArchivo(nombreArchivo, 'usuarios');
 
             return res.status(400).json({
-                ok: false ,
+                ok: false,
                 err: {
-                    message: 'El usuario no existe'
+                    message: 'Usuaro no existe'
                 }
             });
-        };
+        }
 
-        let pathImagen = path.resolve(__dirname, `../../uploads/${ tipo }/${ usuarioDB.img }`);
-        if (fs.existsSync()) {
-            fs.unlinkSync(pathImagen);
-        };
+        borraArchivo(usuarioDB.img, 'usuarios')
 
-        borraArchivo(usuarioDB.img, 'usuarios');
+        usuarioDB.img = nombreArchivo;
 
-        usuarioDB.img= nombreArchivo;
-        usuarioDB.save( (err, usuarioGuardado)=> {
+        usuarioDB.save((err, usuarioGuardado) => {
+
             res.json({
-                ok: true ,
-                usuario: usuarioGuardado
+                ok: true,
+                usuario: usuarioGuardado,
+                img: nombreArchivo
             });
+
         });
+
+
     });
+
+
 }
 
 
-//...............................................................
-// imagen producto
-//...............................................................
+
 function imagenProducto(id, res, nombreArchivo) {
-    Producto.findById(id, (err, productoDB) => {
-        if (err) {
 
+    Producto.findById(id, (err, productoDB) => {
+
+        if (err) {
             borraArchivo(nombreArchivo, 'productos');
 
             return res.status(500).json({
-                ok: false, 
+                ok: false,
                 err
             });
-        };
+        }
 
-        if (!usuarioDB) {
+        if (!productoDB) {
 
             borraArchivo(nombreArchivo, 'productos');
 
             return res.status(400).json({
-                ok: false ,
+                ok: false,
                 err: {
-                    message: 'El producto no existe'
+                    message: 'Usuaro no existe'
                 }
             });
-        };
+        }
 
-        borraArchivo(productoDB.img, 'productos');
+        borraArchivo(productoDB.img, 'productos')
 
-        productoDB.img= nombreArchivo;
-        productoDB.save( (err, productoGuardado)=> {
+        productoDB.img = nombreArchivo;
+
+        productoDB.save((err, productoGuardado) => {
+
             res.json({
-                ok: true ,
-                producto: productoGuardado
+                ok: true,
+                producto: productoGuardado,
+                img: nombreArchivo
             });
+
         });
+
+
     });
+
+
 }
 
 
-//...............................................................
-// funciones adicionales
-//...............................................................
+
 function borraArchivo(nombreImagen, tipo) {
-    let pathImagen = path.resolve(__dirname, `../../uploads/${ tipo }/${ usuarioDB.img }`);
-    if (fs.existsSync()) {
+
+    let pathImagen = path.resolve(__dirname, `../../uploads/${ tipo }/${ nombreImagen }`);
+    if (fs.existsSync(pathImagen)) {
         fs.unlinkSync(pathImagen);
-    };
+    }
+
+
 }
 
 module.exports = app;
